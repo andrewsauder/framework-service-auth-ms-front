@@ -1,0 +1,14 @@
+{
+	"name": "gcgov/framework-service-documentation",
+	"type": "framework-service",
+	"description": "Plugins enables the exchange of a Microsoft access token for an application access token. The service assumes the user's front\n  end will handle the authentication flow to acquire and manage the expiration of the Microsoft access token. When the\n  framework app's token expires, user must re-exchange a valid Microsoft access token for an updated app access token.\n  There are no app refresh tokens or mechanisms.",
+	"license": "MIT",
+	"autoload": {
+		"psr-4": {
+			"gcgov\\framework\\services\\authmsfront\\": "src/"
+		}
+	},
+	"require": {
+		"php": ">=8.1"
+	}
+}
