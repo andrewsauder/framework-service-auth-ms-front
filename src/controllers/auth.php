@@ -1,14 +1,11 @@
 <?php
 
-
 namespace gcgov\framework\services\authmsfront\controllers;
-
 
 use gcgov\framework\exceptions\controllerException;
 use gcgov\framework\exceptions\modelException;
 use gcgov\framework\interfaces\controller;
 use gcgov\framework\models\controllerDataResponse;
-
 
 class auth implements controller {
 
@@ -16,16 +13,17 @@ class auth implements controller {
 
 	}
 
+
 	//URL: /.well-known/jwks.json
-	public function jwks() : controllerDataResponse {
+	public function jwks(): controllerDataResponse {
 		$jwtService = new \gcgov\framework\services\jwtAuth\jwtAuth();
-		$jwksKeys = $jwtService->getJwksKeys();
+		$jwksKeys   = $jwtService->getJwksKeys();
 
 		$data = [
 			'keys' => $jwksKeys
 		];
 
-		return new controllerDataResponse($data);
+		return new controllerDataResponse( $data );
 	}
 
 
@@ -33,7 +31,7 @@ class auth implements controller {
 	 * @return \gcgov\framework\models\controllerDataResponse
 	 * @throws \gcgov\framework\exceptions\controllerException
 	 */
-	public function microsoft() : controllerDataResponse {
+	public function microsoft(): controllerDataResponse {
 
 		if( !isset( $_SERVER[ 'HTTP_AUTHORIZATION' ] ) ) {
 			new controllerException( 'Microsoft access token not provided in authorization header', 401 );
@@ -41,8 +39,8 @@ class auth implements controller {
 
 		//authenticate user with Microsoft
 		$microsoftAuthService = new \gcgov\framework\services\microsoft\auth();
-		$tokenInfo = $microsoftAuthService->verify();
-		$user = $this->lookupUserMicrosoftTokenInfo( $tokenInfo );
+		$tokenInfo            = $microsoftAuthService->verify();
+		$user                 = $this->lookupUserMicrosoftTokenInfo( $tokenInfo );
 
 		//convert \app\models\user to authUser singleton
 		$authUser = \gcgov\framework\services\request::getAuthUser();
@@ -57,15 +55,40 @@ class auth implements controller {
 			'accessToken' => $accessToken->toString()
 		];
 
-		return new controllerDataResponse($data);
+		return new controllerDataResponse( $data );
 
+	}
+
+
+	/**
+	 * @OA\Get(
+	 *     path="/auth/fileToken",
+	 *     tags={"Auth"},
+	 *     description="Use your app access token to get a very short lived access token that can be used as a URL parameter on specific routes that allow it"
+	 * )
+	 *
+	 * @return \gcgov\framework\models\controllerDataResponse
+	 */
+	public function fileToken(): controllerDataResponse {
+		$authUser = \gcgov\framework\services\request::getAuthUser();
+
+		//generate our custom jwt and return it to the user
+		$jwtService  = new \gcgov\framework\services\jwtAuth\jwtAuth();
+		$accessToken = $jwtService->createAccessToken( $authUser, new \DateInterval( 'PT5S' ) );
+
+		//return data
+		$data = [
+			'accessToken' => $accessToken->toString()
+		];
+
+		return new controllerDataResponse( $data );
 	}
 
 
 	/**
 	 * Processed after lifecycle is complete with this instance
 	 */
-	public static function _after() : void {
+	public static function _after(): void {
 
 	}
 
@@ -73,7 +96,7 @@ class auth implements controller {
 	/**
 	 * Processed prior to __constructor() being called
 	 */
-	public static function _before() : void {
+	public static function _before(): void {
 
 	}
 

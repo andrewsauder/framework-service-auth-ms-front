@@ -13,7 +13,8 @@ class router
 	public function getRoutes(): array {
 		return [
 			new route( 'GET', config::getEnvironmentConfig()->getBasePath() . '/.well-known/jwks.json', '\gcgov\framework\controllers\auth', 'jwks', false ),
-			new route( 'GET', config::getEnvironmentConfig()->getBasePath() . '/auth/microsoft', '\gcgov\framework\controllers\auth', 'microsoft', false )
+			new route( 'GET', config::getEnvironmentConfig()->getBasePath() . '/auth/microsoft', '\gcgov\framework\controllers\auth', 'microsoft', false ),
+			new route( 'GET', config::getEnvironmentConfig()->getBasePath() . '/auth/fileToken', '\gcgov\framework\controllers\auth', 'fileToken', true )
 		];
 	}
 
