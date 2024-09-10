@@ -6,6 +6,7 @@ use gcgov\framework\exceptions\controllerException;
 use gcgov\framework\exceptions\modelException;
 use gcgov\framework\interfaces\controller;
 use gcgov\framework\models\controllerDataResponse;
+use gcgov\framework\services\authmsfront\msAuthConfig;
 
 class auth implements controller {
 
@@ -109,25 +110,21 @@ class auth implements controller {
 
 		//get user from database using Microsoft unique Id
 		try {
-			return $userClassName::getOneByExternalId( $tokenInfo->oid );
+			$msAuthConfig = msAuthConfig::getInstance();
+
+			$user = $userClassName::getFromOauth(
+				email:            $tokenInfo->email,
+				externalId:       $tokenInfo->oid,
+				externalProvider: 'MicrosoftGraph',
+				firstName:        $tokenInfo->givenName,
+				lastName:         $tokenInfo->familyName,
+				addIfNotExisting: !$msAuthConfig->isBlockNewUsers(),
+				rolesForNewUser:  $msAuthConfig->getDefaultNewUserRoles() );
 		}
 		catch( modelException $e ) {
-			//user not found in the database by unique id
-			if( !isset( $tokenInfo->preferred_username ) ) {
-				throw new \gcgov\framework\exceptions\controllerException( 'The Microsoft user may need to be added to the user collection within the application. This Microsoft user could not be found in the app user list by external id and does not have a preferred username to lookup by email.', 404, $e );
-			}
+			throw new \gcgov\framework\exceptions\controllerException( 'The Microsoft user may need to be added to the user collection within the application. This Microsoft user could not be found in the app user list by external id and does not have a preferred username to lookup by email.', 404, $e );
 		}
 
-		//look up if they are a new user that just has an email address
-		try {
-			$user = $userClassName::getOneByEmail( $tokenInfo->preferred_username );
-		}
-		catch( modelException $e ) {
-			throw new \gcgov\framework\exceptions\controllerException( 'The Microsoft user may need to be added to the user collection within the application. This Microsoft user could not be found in the app user list by external id or email address.', 404, $e );
-		}
-
-		//set the external id for future logins
-		$user->externalId = $tokenInfo->oid;
 		try {
 			$updateResult = $userClassName::save( $user );
 		}
