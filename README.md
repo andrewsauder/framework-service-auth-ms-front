@@ -22,3 +22,24 @@
 ### Implementation
 * Requests to `/auth/microsoft` must provide `Authorization` header with the valid Microsoft access token. Ex `Authorization: Bearer {microsoft_token}`
 * Response body: `{ 'access_token':'-app_access_token-', 'expires_in':3600, 'token_type':'Bearer' }`
+
+## Configuration
+
+### Allowed Users
+By default, users attempting to sign in who not already present in the user database collection will be prevented from
+signing in. To enable sign in for any user who passes the third party Oauth provider authentication, set
+config variable `blockNewUsers=false`. When `blockNewUsers=false`, any user successfully authenticated by the third
+party Oauth provider will be automatically added to the database user config
+
+```php
+$msAuthConfig = msAuthConfig::getInstance();
+$msAuthConfig->setBlockNewUsers( false );
+```
+### New User Default Roles
+When `blockNewUsers=false`, new users will be automatically added to the user database collection. To set the default
+roles that a new user should be assigned at creation, provide the roles to the `setBlockNewUsers` method.
+
+```php
+$msAuthConfig = msAuthConfig::getInstance();
+$msAuthConfig->setBlockNewUsers( false, [ 'Role1.Read', 'Role2.Read', 'Role2.Write' ] );
+```
