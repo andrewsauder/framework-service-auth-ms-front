@@ -2,6 +2,7 @@
 
 namespace gcgov\framework\services\authmsfront\controllers;
 
+use gcgov\framework\config;
 use gcgov\framework\exceptions\controllerException;
 use gcgov\framework\exceptions\modelException;
 use gcgov\framework\interfaces\controller;
@@ -39,7 +40,12 @@ class auth implements controller {
 		}
 
 		//authenticate user with Microsoft
-		$microsoftAuthService = new \gcgov\framework\services\microsoft\auth();
+		$microsoftConfig               = new \andrewsauder\microsoftServices\config();
+		$microsoftConfig->clientId     = config::getEnvironmentConfig()->microsoft->clientId;
+		$microsoftConfig->clientSecret = config::getEnvironmentConfig()->microsoft->clientSecret;
+		$microsoftConfig->tenant       = config::getEnvironmentConfig()->microsoft->tenant;
+		$microsoftConfig->fromAddress  = config::getEnvironmentConfig()->microsoft->fromAddress;
+		$microsoftAuthService = new \andrewsauder\microsoftServices\auth( $microsoftConfig ); // \gcgov\framework\services\microsoft\auth();
 		$tokenInfo            = $microsoftAuthService->verify();
 		$user                 = $this->lookupUserMicrosoftTokenInfo( $tokenInfo );
 
@@ -105,7 +111,7 @@ class auth implements controller {
 	/**
 	 * @throws \gcgov\framework\exceptions\controllerException
 	 */
-	private function lookupUserMicrosoftTokenInfo( \gcgov\framework\services\microsoft\components\tokenInfomation $tokenInfo ): \gcgov\framework\services\mongodb\models\auth\user {
+	private function lookupUserMicrosoftTokenInfo( \andrewsauder\microsoftServices\components\tokenInformation $tokenInfo ): \gcgov\framework\services\mongodb\models\auth\user {
 		$userClassName = \gcgov\framework\services\request::getUserClassFqdn();
 
 		//get user from database using Microsoft unique Id
@@ -116,8 +122,7 @@ class auth implements controller {
 				email:            $tokenInfo->email,
 				externalId:       $tokenInfo->oid,
 				externalProvider: 'MicrosoftGraph',
-				firstName:        $tokenInfo->givenName,
-				lastName:         $tokenInfo->familyName,
+				firstName:        $tokenInfo->name,
 				addIfNotExisting: !$msAuthConfig->isBlockNewUsers(),
 				rolesForNewUser:  $msAuthConfig->getDefaultNewUserRoles() );
 		}
